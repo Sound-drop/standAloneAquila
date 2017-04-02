@@ -33,5 +33,5 @@ Next steps differ a little, depending on your operating system.
 On Linux the following should *just work*:
 
     make
-    ./tset
+    ./test
 
