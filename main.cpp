@@ -25,8 +25,10 @@ int main(int argc, char *argv[])
     Aquila::SampleType maxValue = 0, minValue = 0, average = 0;
 
     const Aquila::FrequencyType sampleFreq = wav.getSampleFrequency();
-    const std::size_t SIZE = 300;
+    const std::size_t SIZE = 4000;
     const std::size_t END = wav.getSamplesCount();
+    //220500
+    //cout << END;
     const Aquila::FrequencyType f_lp = 500;
 
     vector<Aquila::SampleType> chunk;
@@ -74,7 +76,15 @@ int main(int argc, char *argv[])
     cout<<"work";
     Aquila::SpectrumType spectrum = fft->fft(data.toArray());
     plt.setTitle("Signal spectrum before filtration");
-    plt.plotSpectrum(spectrum);
+    //cout << spectrum.size();
+    int kk = 0;
+    for(auto&x : spectrum){
+     cout<<x<<endl;
+     kk++;
+     cout << kk;
+ 	}
+
+    // plt.plotSpectrum(spectrum);
 
     // generate a low-pass filter spectrum
     Aquila::SpectrumType filterSpectrum(SIZE);
@@ -92,7 +102,7 @@ int main(int argc, char *argv[])
         }
     }
     plt.setTitle("Filter spectrum");
-    plt.plotSpectrum(filterSpectrum);
+    // plt.plotSpectrum(filterSpectrum);
 
     // the following call does the multiplication of two spectra
     // (which is complementary to convolution in time domain)
@@ -104,7 +114,7 @@ int main(int argc, char *argv[])
         [] (Aquila::ComplexType x, Aquila::ComplexType y) { return x * y; }
     );
     plt.setTitle("Signal spectrum after filtration");
-    plt.plotSpectrum(spectrum);
+    // plt.plotSpectrum(spectrum);
 
     // Inverse FFT moves us back to time domain
     double x1[SIZE];
