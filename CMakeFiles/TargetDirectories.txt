@@ -1,0 +1,3 @@
+/Users/micklin/Documents/cpp_final/aquila-standalone-example/CMakeFiles/rebuild_cache.dir
+/Users/micklin/Documents/cpp_final/aquila-standalone-example/CMakeFiles/edit_cache.dir
+/Users/micklin/Documents/cpp_final/aquila-standalone-example/CMakeFiles/Aquila_example.dir

@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/micklin/Documents/cpp_final/aquila-standalone-example/main.cpp
+aquila/global.h
+/Users/micklin/Documents/cpp_final/aquila-standalone-example/aquila/global.h
+aquila/source/generator/SineGenerator.h
+/Users/micklin/Documents/cpp_final/aquila-standalone-example/aquila/source/generator/SineGenerator.h
+aquila/tools/TextPlot.h
+/Users/micklin/Documents/cpp_final/aquila-standalone-example/aquila/tools/TextPlot.h
+
