@@ -11,6 +11,26 @@
 #include <cstdlib>
 using namespace std;
 
+void plotSpectrum(Aquila::SpectrumType spectrum, Aquila::FrequencyType sampleFreq)
+    {
+        std::size_t halfLength = spectrum.size() / 2;
+        std::vector<double> absSpectrum(halfLength);
+        double max = 0;
+        int peak_freq  = 0;
+        for (std::size_t i = 0; i < halfLength; ++i)
+        {
+            absSpectrum[i] = std::abs(spectrum[i]);
+            //cout << i*(sampleFreq/halfLength)<< " amp " <<absSpectrum[i] << endl;
+            if(absSpectrum[i] > max){ 
+                max = absSpectrum[i];
+                peak_freq = i*(sampleFreq/halfLength)/2;
+            }
+        }
+        cout << "\n\npeak freq for input with sample size: "<< halfLength*2 << " which needs to be pow of 2" <<endl;
+        cout <<peak_freq << " Hz max amp:" << max << endl;
+        //plot(absSpectrum);
+    }
+
 int main(int argc, char *argv[])
 {
 	if (argc < 2)
@@ -20,12 +40,10 @@ int main(int argc, char *argv[])
     }
 
     Aquila::WaveFile wav(argv[1]);
-    std::cout << "Loaded file: " << wav.getFilename()
-              << " (" << wav.getBitsPerSample() << "b)" << std::endl;
-    Aquila::SampleType maxValue = 0, minValue = 0, average = 0;
+
 
     const Aquila::FrequencyType sampleFreq = wav.getSampleFrequency();
-    const std::size_t SIZE = 4000;
+    const std::size_t SIZE = 64;
     const std::size_t END = wav.getSamplesCount();
     //220500
     //cout << END;
@@ -47,44 +65,15 @@ int main(int argc, char *argv[])
 
     Aquila::TextPlot plt("input wave");
 
-    //trap??
-    //plt.plot(data);
-
-
-    
-    /*
-    // input signal parameters
-    
-  
-
-    Aquila::SquareGenerator generator1(SIZE);
-    generator1.setFrequency(f1).setAmplitude(255).generate(64);
-    ///Aquila::SquareGenerator generator2(SIZE);
-    //generator2.setFrequency(f2).setAmplitude(255).generate(64);
-   
-    auto sum = generator1;
-    // + generator2;
-
-    Aquila::TextPlot plt("Signal waveform before filtration");
-    plt.plot(sum);*/
-
-    // calculate the FFT
-
-    //for(auto&x :generator.toArray()) cout<<x;
+ 
     
     auto fft = Aquila::FftFactory::getFft(SIZE);
-    cout<<"work";
     Aquila::SpectrumType spectrum = fft->fft(data.toArray());
     plt.setTitle("Signal spectrum before filtration");
-    //cout << spectrum.size();
-    int kk = 0;
-    for(auto&x : spectrum){
-     cout<<x<<endl;
-     kk++;
-     cout << kk;
- 	}
 
-    // plt.plotSpectrum(spectrum);
+
+    plotSpectrum(spectrum, sampleFreq);
+    plt.plotSpectrum(spectrum);
 
     // generate a low-pass filter spectrum
     Aquila::SpectrumType filterSpectrum(SIZE);
