@@ -19,10 +19,11 @@ void findMax(Aquila::SpectrumType spectrum, Aquila::FrequencyType sampleFreq)
         std::vector<double> absSpectrum(halfLength);
         double max = 0;
         int peak_freq  = 0;
-        for (std::size_t i = 0; i < halfLength; ++i)
+        int start = 15000/((sampleFreq/halfLength)/2);
+        for (std::size_t i = start; i < halfLength; ++i)
         {
             absSpectrum[i] = std::abs(spectrum[i]);
-            //cout << i*(sampleFreq/halfLength)<< " amp " <<absSpectrum[i] << endl;
+            // cout << i*(sampleFreq/halfLength)<< " amp " <<absSpectrum[i] << endl;
             if(absSpectrum[i] > max){ 
                 max = absSpectrum[i];
                 peak_freq = i*(sampleFreq/halfLength)/2;
