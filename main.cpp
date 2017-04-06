@@ -28,7 +28,7 @@ void findMax(Aquila::SpectrumType spectrum, Aquila::FrequencyType sampleFreq)
                 peak_freq = i*(sampleFreq/halfLength)/2;
             }
         }
-        cout << "\n\npeak freq for input with sample size: "<< halfLength*2 << " which needs to be pow of 2" <<endl;
+        cout << "peak freq for input with sample size: "<< halfLength*2 << " which needs to be pow of 2" <<endl;
         cout <<peak_freq << " Hz max amp:" << max << endl;
         //plot(absSpectrum);
     }
@@ -51,12 +51,13 @@ void freqOfindex(std::size_t start, Aquila::WaveFile wav){
  
     
     auto fft = Aquila::FftFactory::getFft(SIZE);
+    cout << "\n\nSignal spectrum of "<<start<< endl;
     Aquila::SpectrumType spectrum = fft->fft(data.toArray());
     plt.setTitle("Signal spectrum of "+ std::to_string(start));
 
 
     findMax(spectrum, sampleFreq);
-    plt.plotSpectrum(spectrum);
+    // plt.plotSpectrum(spectrum);
 
 }
 
@@ -74,9 +75,9 @@ int main(int argc, char *argv[])
     std::size_t start = 0;
 
     while(start < END && wav.sample(start) <= 1000 ) start++;
-    //220500
-    cout << END <<endl;
-    cout << start;
+    //220500 = 5*44100
+    // cout << END <<endl;
+    // cout << start;
 
     for(int x = start; x < END; x+=END/5) freqOfindex(x, wav);
 
