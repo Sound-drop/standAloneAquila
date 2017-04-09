@@ -73,9 +73,10 @@ int main(int argc, char *argv[])
     }
 
     Aquila::WaveFile wav(argv[1]);
-    const Aquila::FrequencyType f_fp = 15000;
+   
 
     const std::size_t END = wav.getSamplesCount();
+    //const Aquila::FrequencyType f_fp = 15000;
     // Aquila::FrequencyType sampleFreq = wav.getSampleFrequency();
     // int full = SIZE;
     // for(; full*2 < END; full*=2);
