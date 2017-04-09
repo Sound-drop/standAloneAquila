@@ -9,34 +9,49 @@
 #include <memory>
 #include <iostream>
 #include <cstdlib>
+
 using namespace std;
 
-const std::size_t SIZE = 512;
+const std::size_t SIZE = 1024;
 
-int findMax(Aquila::SpectrumType spectrum, Aquila::FrequencyType sampleFreq)
+
+vector<int> findMax(Aquila::SpectrumType spectrum, Aquila::FrequencyType sampleFreq)
     {
         std::size_t halfLength = spectrum.size() / 2;
         std::vector<double> absSpectrum(halfLength);
         double max = 0;
         int peak_freq  = 0;
+        std::vector<int> ret;
+        
         //search the band of the freq >= 15000
         int start = 0;
+        int highpass = 19000/((sampleFreq/halfLength)/2);
         for (std::size_t i = start; i < halfLength; ++i)
         {
             absSpectrum[i] = std::abs(spectrum[i]);
-            // cout << i*(sampleFreq/halfLength)<< " amp " <<absSpectrum[i] << endl;
+            int round_freq = (int)((i-1)*(sampleFreq/halfLength)/2 + 50) /100;
+
+            if(i>highpass && absSpectrum[i-2] < absSpectrum[i-1] && absSpectrum[i-1] > absSpectrum[i] ){
+                 
+                 ret.push_back(round_freq);
+                 // cout << round_freq<< " amp " <<absSpectrum[i-1] << endl;
+            
+            }
+            
             if(absSpectrum[i] > max){ 
                 max = absSpectrum[i];
-                peak_freq = i*(sampleFreq/halfLength)/2;
+                peak_freq = round_freq;
             }
         }
         //cout << "peak freq for input with sample size: "<< halfLength*2 << " which needs to be pow of 2" <<endl;
         //cout <<peak_freq << " Hz max amp:" << max << endl;
         //plot(absSpectrum);
-        return peak_freq;
+        if(peak_freq < 190) ret.clear();
+
+        return ret;
     }
 
-int freqOfindex(std::size_t start, Aquila::WaveFile wav){
+vector<int> freqOfindex(std::size_t start, Aquila::WaveFile wav){
     Aquila::FrequencyType sampleFreq = wav.getSampleFrequency();
     vector<Aquila::SampleType> chunk;
     for (std::size_t i =start; i< start+SIZE; ++i)
@@ -133,21 +148,26 @@ int main(int argc, char *argv[])
     std::size_t start = 0;
 
     while(start < END){
-        int peak = freqOfindex(start,wav);
+        vector<int> peak= freqOfindex(start,wav);
         //cout << peak << " time " << start << endl;
-        if (peak >= 15000) break;
+        if (peak.size() != 0 ){
+            cout << "Tracked freq (100 Hz): ";
+            for(auto&x : peak) cout<< x <<" ";
+            cout<<endl;
+         break;
+        }
         start += SIZE;
     }
     //220500 = 5*44100
     // cout << END <<endl;
-    //cout << start;
+    cout << "Starting at time: "<< start << endl;
 
-    for(int x = start; x < END; x+=END/50){ 
-        int peak = freqOfindex(x,wav);
-        if(peak < 15000 ) break;
-        cout << peak << " time " << x << endl;
+    // for(int x = start; x < END; x+=END/50){ 
+    //     int peak = freqOfindex(x,wav);
+    //     if(peak < 15000 ) break;
+    //     cout << peak << " time " << x << endl;
         
-    }
+    // }
 
    
     return 0;
