@@ -25,13 +25,15 @@ vector<int> findMax(Aquila::SpectrumType spectrum, Aquila::FrequencyType sampleF
         
         //search the band of the freq >= 15000
         int start = 0;
-        int highpass = 19000/((sampleFreq/halfLength)/2);
+        int highpass = 190;
         for (std::size_t i = start; i < halfLength; ++i)
         {
             absSpectrum[i] = std::abs(spectrum[i]);
             int round_freq = (int)((i-1)*(sampleFreq/halfLength)/2 + 50) /100;
 
-            if(i>highpass && absSpectrum[i-2] < absSpectrum[i-1] && absSpectrum[i-1] > absSpectrum[i] ){
+            // if(round_freq > highpass) cout << round_freq<< " amp " << absSpectrum[i-1] << endl;
+            if(round_freq > highpass && absSpectrum[i-2] < absSpectrum[i-1] && absSpectrum[i-1] > absSpectrum[i] 
+                && absSpectrum[i-2]> 10000 && absSpectrum[i-1]> 10000 && absSpectrum[i]> 10000 ){
                  
                  ret.push_back(round_freq);
                  // cout << round_freq<< " amp " <<absSpectrum[i-1] << endl;
@@ -46,15 +48,15 @@ vector<int> findMax(Aquila::SpectrumType spectrum, Aquila::FrequencyType sampleF
         //cout << "peak freq for input with sample size: "<< halfLength*2 << " which needs to be pow of 2" <<endl;
         //cout <<peak_freq << " Hz max amp:" << max << endl;
         //plot(absSpectrum);
-        if(peak_freq < 190) ret.clear();
+        // if(peak_freq < 190) ret.clear();
 
         return ret;
     }
 
-vector<int> freqOfindex(std::size_t start, Aquila::WaveFile wav){
+vector<int> freqOfindex(std::size_t start, Aquila::WaveFile wav, int size){
     Aquila::FrequencyType sampleFreq = wav.getSampleFrequency();
     vector<Aquila::SampleType> chunk;
-    for (std::size_t i =start; i< start+SIZE; ++i)
+    for (std::size_t i =start; i< start+size; ++i)
     {   
 
         chunk.push_back(wav.sample(i));
@@ -68,7 +70,7 @@ vector<int> freqOfindex(std::size_t start, Aquila::WaveFile wav){
 
  
     
-    auto fft = Aquila::FftFactory::getFft(SIZE);
+    auto fft = Aquila::FftFactory::getFft(size);
     // cout << "\n\nSignal spectrum of time index: "<<start<< endl;
     Aquila::SpectrumType spectrum = fft->fft(data.toArray());
     plt.setTitle("Signal spectrum of "+ std::to_string(start));
@@ -88,87 +90,62 @@ int main(int argc, char *argv[])
     }
 
     Aquila::WaveFile wav(argv[1]);
-   
+    std::cout << "Filename: "           << wav.getFilename();
+    std::cout << "\nLength: "           << wav.getAudioLength()     << " ms";
+    std::cout << "\nSample frequency: " << wav.getSampleFrequency() << " Hz";
+    std::cout << "\nChannels: "         << wav.getChannelsNum();
+    std::cout << "\nByte rate: "        << wav.getBytesPerSec()/1024 << " kB/s";
+    std::cout << "\nBits per sample: "  << wav.getBitsPerSample() << "b\n";
 
     const std::size_t END = wav.getSamplesCount();
-    //const Aquila::FrequencyType f_fp = 15000;
-    // Aquila::FrequencyType sampleFreq = wav.getSampleFrequency();
-    // int full = SIZE;
-    // for(; full*2 < END; full*=2);
-    
-    // vector<Aquila::SampleType> chunk;
-    // for (std::size_t i =0; i<full; ++i)
-    // {   
-
-    //     chunk.push_back(wav.sample(i));
-    //     //62269 max entry
-    //     //if(i>61000 && i< 64000)cout<<wav.sample(i)<< " "<<i << endl;
-    // }
-    // Aquila::SignalSource dataBeforeFilter(chunk, sampleFreq);
-    
-    // cout<<"test"<< full<< endl;
-    // auto fft = Aquila::FftFactory::getFft(full);
-    // Aquila::SpectrumType spectrum = fft->fft(dataBeforeFilter.toArray());
-
-    // Aquila::TextPlot plt("Signal spectrum before filtration");
-    // //plt.plotSpectrum(spectrum);
-
-    // Aquila::SpectrumType filterSpectrum(full);
-    // //high pass filter
-    // for (std::size_t i = 0; i <  full; ++i){
-    //     if (i < (full*f_fp / sampleFreq))
-    //     {
-    //         // stopband
-    //         filterSpectrum[i] = 0.0;
-    //     }
-    //     else
-    //     {
-    //         // passband
-    //         filterSpectrum[i] = 1.0;
-    //     }
-    // }
-    // std::transform(
-    //     std::begin(spectrum),
-    //     std::end(spectrum),
-    //     std::begin(filterSpectrum),
-    //     std::begin(spectrum),
-    //     [] (Aquila::ComplexType x, Aquila::ComplexType y) { return x * y; }
-    // );
-
-    // // Inverse FFT moves us back to time domain
-    // double filtered[full];
-    // fft->ifft(spectrum, filtered);
-    
-    // //plt.plot(filtered, END);
-
-    // for(int i=0; i< full; i++ ){
-    //   if(std::abs(filtered[i]) > 1000 && i <64000)cout<<filtered[i]<< " "<<i<<endl;
-    // }
+    const std::size_t sampleFreq = wav.getSampleFrequency(); 
 
     std::size_t start = 0;
 
+
     while(start < END){
-        vector<int> peak= freqOfindex(start,wav);
-        //cout << peak << " time " << start << endl;
-        if (peak.size() != 0 ){
+        vector<int> peak= freqOfindex(start,wav, SIZE/2);
+        // cout <<"time " << start << endl;
+        if (peak.size() ==1){
             cout << "Tracked freq (100 Hz): ";
             for(auto&x : peak) cout<< x <<" ";
             cout<<endl;
+            
          break;
         }
-        start += SIZE;
+        start += SIZE/2;
     }
     //220500 = 5*44100
-    // cout << END <<endl;
+    cout << "total:"<< END <<endl;
     cout << "Starting at time: "<< start << endl;
+    int right = start, two_block = right+2*(sampleFreq/10);
+    // vector<int> peak= freqOfindex(start+SIZE/2,wav, SIZE/2);
+    // cout << "Tracked freq (100 Hz): ";
+    // for(auto&x : peak) cout<< x <<" ";
+    // cout<<endl;
+    // int left = start - SIZE, right = start;
+    // while(left < right){
+    //     int mid = (left+right)/2;
+    //     vector<int> peak= freqOfindex(mid,wav,SIZE/2);
 
-    // for(int x = start; x < END; x+=END/50){ 
-    //     int peak = freqOfindex(x,wav);
-    //     if(peak < 15000 ) break;
-    //     cout << peak << " time " << x << endl;
-        
+    //     if(peak.size() == 0) left = mid+1;
+    //     else if(peak.size() > 1) right = mid;
+    
     // }
+    // cout << "located peak: "<< right << endl;
+    // right = 67914;
+    while(right <= two_block){
+        vector<int> peak= freqOfindex(right,wav, SIZE);
+        cout << " time " << right << endl;
 
+        cout << "Tracked freq (100 Hz): ";
+        for(auto&x : peak) cout<< x <<" ";
+        cout<<endl;
+   
+        if (peak.size() == 1 ) break;
+
+        right += sampleFreq/10;
+    }
    
     return 0;
 }
