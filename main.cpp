@@ -31,9 +31,9 @@ vector<int> findMax(Aquila::SpectrumType spectrum, Aquila::FrequencyType sampleF
             absSpectrum[i] = std::abs(spectrum[i]);
             int round_freq = (int)((i-1)*(sampleFreq/halfLength)/2 + 50) /100;
 
-            // if(round_freq > highpass) cout << round_freq<< " amp " << absSpectrum[i-1] << endl;
+            //if(round_freq > highpass) cout << round_freq<< " amp " << absSpectrum[i-1] << endl;
             if(round_freq > highpass && absSpectrum[i-2] < absSpectrum[i-1] && absSpectrum[i-1] > absSpectrum[i] 
-                && absSpectrum[i-2]> 10000 && absSpectrum[i-1]> 10000 && absSpectrum[i]> 10000 ){
+                && absSpectrum[i-1] > 800000 ){
                  
                  ret.push_back(round_freq);
                  // cout << round_freq<< " amp " <<absSpectrum[i-1] << endl;
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 
 
     while(start < END){
-        vector<int> peak= freqOfindex(start,wav, SIZE/2);
+        vector<int> peak= freqOfindex(start,wav, SIZE);
         // cout <<"time " << start << endl;
         if (peak.size() ==1){
             cout << "Tracked freq (100 Hz): ";
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
             
          break;
         }
-        start += SIZE/2;
+        start += SIZE;
     }
     //220500 = 5*44100
     cout << "total:"<< END <<endl;
@@ -134,6 +134,7 @@ int main(int argc, char *argv[])
     // }
     // cout << "located peak: "<< right << endl;
     // right = 67914;
+    std::vector<int> data;
     while(right <= two_block){
         vector<int> peak= freqOfindex(right,wav, SIZE);
         cout << " time " << right << endl;
@@ -142,10 +143,27 @@ int main(int argc, char *argv[])
         for(auto&x : peak) cout<< x <<" ";
         cout<<endl;
    
-        if (peak.size() == 1 ) break;
+        if (peak.size() != 1 ){
+             int cur = 0;
+             for(auto&x : peak){
+                int shift = x - 195;
+                if(shift >=0) cur |= 1 << shift;
+             }
+             data.push_back(cur);
+        }
 
         right += sampleFreq/10;
     }
+    cout << "parsing ip" << endl;
+    const unsigned short _8bitMask  = 0x00FF;
+    for(auto x : data){
+        while(x>0){
+            cout <<  (x & _8bitMask) <<" ";
+            x >>= 8;
+        }
+
+    }
+    cout << endl;
    
     return 0;
 }
