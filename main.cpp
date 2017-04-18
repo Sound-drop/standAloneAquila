@@ -90,12 +90,12 @@ int main(int argc, char *argv[])
     }
 
     Aquila::WaveFile wav(argv[1]);
-    std::cout << "Filename: "           << wav.getFilename();
-    std::cout << "\nLength: "           << wav.getAudioLength()     << " ms";
-    std::cout << "\nSample frequency: " << wav.getSampleFrequency() << " Hz";
-    std::cout << "\nChannels: "         << wav.getChannelsNum();
-    std::cout << "\nByte rate: "        << wav.getBytesPerSec()/1024 << " kB/s";
-    std::cout << "\nBits per sample: "  << wav.getBitsPerSample() << "b\n";
+    // std::cout << "Filename: "           << wav.getFilename();
+    // std::cout << "\nLength: "           << wav.getAudioLength()     << " ms";
+    // std::cout << "\nSample frequency: " << wav.getSampleFrequency() << " Hz";
+    // std::cout << "\nChannels: "         << wav.getChannelsNum();
+    // std::cout << "\nByte rate: "        << wav.getBytesPerSec()/1024 << " kB/s";
+    // std::cout << "\nBits per sample: "  << wav.getBitsPerSample() << "b\n";
 
     const std::size_t END = wav.getSamplesCount();
     const std::size_t sampleFreq = wav.getSampleFrequency(); 
@@ -107,18 +107,17 @@ int main(int argc, char *argv[])
         vector<int> peak= freqOfindex(start,wav, SIZE);
         // cout <<"time " << start << endl;
         if (peak.size() ==1){
-            cout << "Tracked freq (100 Hz): ";
-            for(auto&x : peak) cout<< x <<" ";
-            cout<<endl;
+        //     // cout << "Tracked freq (100 Hz): ";
+        //     for(auto&x : peak) cout<< x <<" ";
+        //     cout<<endl;
             
          break;
         }
         start += SIZE;
     }
     //220500 = 5*44100
-    cout << "total:"<< END <<endl;
-    cout << "Starting at time: "<< start << endl;
-    int right = start, two_block = right+2*(sampleFreq/10);
+    // cout << "total:"<< END <<endl;
+    // cout << "Starting at time: "<< start << endl;
     // vector<int> peak= freqOfindex(start+SIZE/2,wav, SIZE/2);
     // cout << "Tracked freq (100 Hz): ";
     // for(auto&x : peak) cout<< x <<" ";
@@ -135,32 +134,57 @@ int main(int argc, char *argv[])
     // cout << "located peak: "<< right << endl;
     // right = 67914;
     std::vector<int> data;
-    while(right <= two_block){
+    bool endchirp = false;
+    int pre_freq = 0, right = start; 
+    while(1){
         vector<int> peak= freqOfindex(right,wav, SIZE);
-        cout << " time " << right << endl;
+        cout << "@ time " << (double)right/(sampleFreq) << "s"<< endl;
 
         cout << "Tracked freq (100 Hz): ";
         for(auto&x : peak) cout<< x <<" ";
         cout<<endl;
    
         if (peak.size() != 1 ){
+             if(pre_freq == 211) endchirp = true;
              int cur = 0;
              for(auto&x : peak){
+
                 int shift = x - 195;
                 if(shift >=0) cur |= 1 << shift;
              }
              data.push_back(cur);
-        }
 
+        //separator or start/end
+        }else{
+            if(pre_freq==0) pre_freq = peak.back();
+            else if(pre_freq == 211 && !endchirp) endchirp = true;
+            else if(peak.back()==211 && endchirp) break;
+
+        }
         right += sampleFreq/10;
     }
-    cout << "parsing ip" << endl;
+
+
     const unsigned short _8bitMask  = 0x00FF;
+    int read_bytes = 0;
     for(auto x : data){
-        while(x>0){
-            cout <<  (x & _8bitMask) <<" ";
-            x >>= 8;
+        int tmp = x;
+       
+        if(read_bytes==4 || read_bytes==10 ) cout << endl;
+        if(read_bytes < 4){
+            while(tmp>0){
+            cout <<  (tmp & _8bitMask) <<" ";
+            tmp >>= 8;
+            }
+        }else{
+            tmp = x;
+            while(tmp>0){
+            cout <<  (char)(tmp & _8bitMask);
+            tmp >>= 8;
+            }
         }
+        read_bytes += 2;
+
 
     }
     cout << endl;
