@@ -10,18 +10,16 @@
 #include "FFTreader.hpp"
 using namespace std;
 
+#define DEBUG_FLAG     (1) 
+
 void FFTreader::parse(){
     std::size_t start = 0;
 
 
     while(start < END){
         vector<int> peak= freqOfindex(start);
-        // cout <<"time " << start << endl;
+
         if (peak.size() ==1){
-        //     // cout << "Tracked freq (100 Hz): ";
-        //     for(auto&x : peak) cout<< x <<" ";
-        //     cout<<endl;
-            
          break;
         }
         start += SIZE;
@@ -31,11 +29,14 @@ void FFTreader::parse(){
     int pre_freq = 0, right = start; 
     while(1){
         vector<int> peak= freqOfindex(right);
+
+#if DEBUG_FLAG
         cout << "@ time " << (double)right/(sampleFreq) << "s"<< endl;
 
         cout << "Tracked freq (100 Hz): ";
         for(auto&x : peak) cout<< x <<" ";
         cout<<endl;
+#endif
    
         if (peak.size() != 1 ){
              if(pre_freq == 211) endchirp = true;
@@ -65,15 +66,22 @@ void FFTreader::parse(){
        
         if(read_bytes==4 || read_bytes==10 ) cout << endl;
         if(read_bytes < 4){
+
             while(tmp>0){
-            cout <<  (tmp & _8bitMask) <<" ";
-            tmp >>= 8;
+                int d = tmp & _8bitMask;    
+#if DEBUG_FLAG
+                cout <<  d <<" ";
+#endif
+                tmp >>= 8;
             }
         }else{
             tmp = x;
             while(tmp>0){
-            cout <<  (char)(tmp & _8bitMask);
-            tmp >>= 8;
+                 char c = (char)(tmp & _8bitMask);
+#if DEBUG_FLAG
+                cout <<  c;
+#endif
+                tmp >>= 8;
             }
         }
         read_bytes += 2;
