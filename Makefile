@@ -7,8 +7,10 @@ PA_INCLUDE_DIR = $(LIBRARY_SRC)
 
 all: test
 
-test: main.cpp
-	$(CXX) $(CXXFLAGS) $< $(PA_STATIC_LIB) -I$(PA_INCLUDE_DIR) -o $@
+test: 
+	$(CXX) $(CXXFLAGS) *.cpp $< $(PA_STATIC_LIB) -I$(PA_INCLUDE_DIR) -o $@
+
+
 
 clean:
 	rm -rf test
