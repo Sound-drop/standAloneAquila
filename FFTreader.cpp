@@ -12,7 +12,7 @@ using namespace std;
 #define abs_amp 10000 
 #define DEBUG_FLAG     (1) 
 
-void FFTreader::parse(){
+vector<string> FFTreader::parse(){
     std::size_t start = 0;
 
 
@@ -96,27 +96,44 @@ void FFTreader::parse(){
         }
         
         const unsigned short _8bitMask  = 0x00FF;
+        std::vector<string> ret;
         int pos = 0;
         for(auto& x: data){
             pos++;
-            for(auto y :x) {
-                // cout<< y <<" ";
-                int tmp = y;
+            string ret_str = "";
+            std::vector<int> ip;
+            for(auto tmp :x) {
+
                 while(tmp > 0){
                     int d = tmp & _8bitMask;    
-#if DEBUG_FLAG
-                   if(pos==1) cout <<  d <<" ";
-                   else cout << (char) d <<" ";
-#endif
+
+                   if(pos==1){ 
+                        ip.push_back(d);
+                   }else{ 
+                        ret_str+=(char) d;
+                   }
+
                     tmp >>= 8;
                 }
+                
+                
 
 
             }
+            if(ip.size()>0){
+                    for(int xx=0; xx< ip.size(); xx++){ 
+                        if(xx == ip.size()-1) ret_str += std::to_string(ip[xx]);
+                        else ret_str+= std::to_string(ip[xx])+'.';
+                    }
+            }
+            ret.push_back(ret_str);
             cout<<endl;
         }
 
+        //ready to return vector<string>
+        // for(auto& x: ret) cout<< x<< endl;
 
+        return ret;
 }
 
 vector<int> FFTreader::findMax(Aquila::SpectrumType spectrum){

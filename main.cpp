@@ -23,6 +23,6 @@ int main(int argc, char *argv[])
     }
     
     FFTreader f(argv[1]);
-    f.parse();   
+    for(auto &x :f.parse()) cout << x << endl;   
     return 0;
 }

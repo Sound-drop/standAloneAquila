@@ -16,11 +16,11 @@ private:
 	Aquila::WaveFile wav;
 	const std::size_t SIZE = 1024;
 	const std::size_t END;
-    const std::size_t sampleFreq; 
+	const std::size_t sampleFreq; 
 	vector<int> findMax(Aquila::SpectrumType spectrum);
 	vector<int> freqOfindex(std::size_t start);
 
 public:
 	FFTreader(string file_path): wav(file_path), END(wav.getSamplesCount()),sampleFreq(wav.getSampleFrequency()){}
-	void parse();
+	vector<string> parse();
 };
