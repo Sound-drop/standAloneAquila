@@ -9,8 +9,8 @@
 #include <cstdlib>
 #include "FFTreader.hpp"
 using namespace std;
-#define abs_amp 1000 
-#define startchirp 211
+#define abs_amp 100000 
+#define startchirp 201
 #define DEBUG_FLAG     (1) 
 
 vector<string> FFTreader::parse(){
@@ -25,8 +25,15 @@ vector<string> FFTreader::parse(){
         }
         start += SIZE;
     }
+    int left = start - SIZE,right = start;
+    // while(left < right){
+    //     int mid = (left+right)/2;
+    //     vector<int> peak= freqOfindex(mid);
+    //     if (peak.size() ==1 && peak.back() == startchirp) right = mid;
+    //     else left = mid+ SIZE/8;
+    // }
     std::vector<std::vector<int>> data;
-    int pre_freq = 0, right = start, pkts = 0, step = sampleFreq/10; 
+    int pre_freq = 0, pkts = 0, step = sampleFreq/10; 
 
         vector<int> peak= freqOfindex(right);
 
@@ -58,11 +65,27 @@ vector<string> FFTreader::parse(){
             int shift = x - (startchirp-16);
             if(x>=(startchirp-16) && x<=(startchirp-1)) cur |= 1 << shift;
         }
+
+#if DEBUG_FLAG
+        cout << "@ time " << (double)right/(sampleFreq) << "s"<< endl;
+
+        cout << "Tracked freq (100 Hz): ";
+        for(auto&x : peak) cout<< x <<" ";
+        cout<<endl;
+#endif
         pkts = cur;
         right += step;
         cout <<"Ready to read pkts:"<< pkts<< endl;
         while(pkts-- >0){
             peak = freqOfindex(right);
+
+#if DEBUG_FLAG
+        cout << "@ time " << (double)right/(sampleFreq) << "s"<< endl;
+
+        cout << "Tracked freq (100 Hz): ";
+        for(auto&x : peak) cout<< x <<" ";
+        cout<<endl;
+#endif
             int datalen = 0;
             for(auto&x : peak){
                 int shift = x - (startchirp-16);
@@ -149,7 +172,7 @@ vector<int> FFTreader::findMax(Aquila::SpectrumType spectrum){
         
         //search the band of the freq >= 15000
         int start = 0;
-        int highpass = startchirp-17;
+        int highpass = startchirp-20;
         for (std::size_t i = start; i < halfLength; ++i)
         {
             absSpectrum[i] = std::abs(spectrum[i]);
