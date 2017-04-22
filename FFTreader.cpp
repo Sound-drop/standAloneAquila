@@ -9,7 +9,8 @@
 #include <cstdlib>
 #include "FFTreader.hpp"
 using namespace std;
-#define abs_amp 10000 
+#define abs_amp 1000 
+#define startchirp 211
 #define DEBUG_FLAG     (1) 
 
 vector<string> FFTreader::parse(){
@@ -19,7 +20,7 @@ vector<string> FFTreader::parse(){
     while(start < END){
         vector<int> peak= freqOfindex(start);
 
-        if (peak.size() ==1){
+        if (peak.size() ==1 && peak.back() == startchirp){
          break;
         }
         start += SIZE;
@@ -37,15 +38,15 @@ vector<string> FFTreader::parse(){
         cout<<endl;
 #endif
         
-        if(peak.size()==1 && pre_freq==0 && peak.back() ==211){
-            //first 211 chirp
-            pre_freq = 211;
+        if(peak.size()==1 && pre_freq==0 && peak.back() == startchirp){
+            //first startchirp chirp
+            pre_freq = startchirp;
             right += step;
         }
         peak= freqOfindex(right);
 
-        if (peak.size()==1 && pre_freq==211 && peak.back() ==211){
-            //second 211 chirp
+        if (peak.size()==1 && pre_freq==startchirp && peak.back() ==startchirp){
+            //second startchirp chirp
             right += step;
         }
 
@@ -54,22 +55,23 @@ vector<string> FFTreader::parse(){
         //read pkt lengt
         int cur = 0;
         for(auto&x : peak){
-            int shift = x - 195;
-            if(shift >=0) cur |= 1 << shift;
+            int shift = x - (startchirp-16);
+            if(x>=(startchirp-16) && x<=(startchirp-1)) cur |= 1 << shift;
         }
         pkts = cur;
         right += step;
+        cout <<"Ready to read pkts:"<< pkts<< endl;
         while(pkts-- >0){
             peak = freqOfindex(right);
             int datalen = 0;
             for(auto&x : peak){
-                int shift = x - 195;
-                if(shift >=0) datalen |= 1 << shift;
+                int shift = x - (startchirp-16);
+                if(x>=(startchirp-16) && x<=(startchirp-1)) datalen |= 1 << shift;
             }
             right += step;
             vector<int> pktdata;
             cout <<"Ready to read data len :"<< datalen<< endl;
-            while(datalen >0){
+            while(datalen > 0){
                 peak = freqOfindex(right);
 #if DEBUG_FLAG
         cout << "@ time " << (double)right/(sampleFreq) << "s"<< endl;
@@ -81,7 +83,7 @@ vector<string> FFTreader::parse(){
        
                 int content = 0;
                 for(auto&x : peak){
-                    int shift = x - 195;
+                    int shift = x - (startchirp-16);
                     if(shift >=0) content |= 1 << shift;
                 }
 
@@ -91,8 +93,10 @@ vector<string> FFTreader::parse(){
                 right += step;
                 //every data has two bytes
                 datalen -= 2;
+                if(right >= END) break;
             }
             data.push_back(pktdata);
+            if(right >= END) break;
         }
         
         const unsigned short _8bitMask  = 0x00FF;
@@ -145,7 +149,7 @@ vector<int> FFTreader::findMax(Aquila::SpectrumType spectrum){
         
         //search the band of the freq >= 15000
         int start = 0;
-        int highpass = 190;
+        int highpass = startchirp-17;
         for (std::size_t i = start; i < halfLength; ++i)
         {
             absSpectrum[i] = std::abs(spectrum[i]);
