@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include "FFTreader.hpp"
 using namespace std;
-
+#define abs_amp 10000 
 #define DEBUG_FLAG     (1) 
 
 void FFTreader::parse(){
@@ -24,10 +24,9 @@ void FFTreader::parse(){
         }
         start += SIZE;
     }
-    std::vector<int> data;
-    bool endchirp = false;
-    int pre_freq = 0, right = start; 
-    while(1){
+    std::vector<std::vector<int>> data;
+    int pre_freq = 0, right = start, pkts = 0, step = sampleFreq/10; 
+
         vector<int> peak= freqOfindex(right);
 
 #if DEBUG_FLAG
@@ -37,58 +36,86 @@ void FFTreader::parse(){
         for(auto&x : peak) cout<< x <<" ";
         cout<<endl;
 #endif
-   
-        if (peak.size() != 1 ){
-             if(pre_freq == 211) endchirp = true;
-             int cur = 0;
-             for(auto&x : peak){
+        
+        if(peak.size()==1 && pre_freq==0 && peak.back() ==211){
+            //first 211 chirp
+            pre_freq = 211;
+            right += step;
+        }
+        peak= freqOfindex(right);
 
+        if (peak.size()==1 && pre_freq==211 && peak.back() ==211){
+            //second 211 chirp
+            right += step;
+        }
+
+        peak = freqOfindex(right);
+
+        //read pkt lengt
+        int cur = 0;
+        for(auto&x : peak){
+            int shift = x - 195;
+            if(shift >=0) cur |= 1 << shift;
+        }
+        pkts = cur;
+        right += step;
+        while(pkts-- >0){
+            peak = freqOfindex(right);
+            int datalen = 0;
+            for(auto&x : peak){
                 int shift = x - 195;
-                if(shift >=0) cur |= 1 << shift;
-             }
-             data.push_back(cur);
+                if(shift >=0) datalen |= 1 << shift;
+            }
+            right += step;
+            vector<int> pktdata;
+            cout <<"Ready to read data len :"<< datalen<< endl;
+            while(datalen >0){
+                peak = freqOfindex(right);
+#if DEBUG_FLAG
+        cout << "@ time " << (double)right/(sampleFreq) << "s"<< endl;
 
-        //separator or start/end
-        }else{
-            if(pre_freq==0) pre_freq = peak.back();
-            else if(pre_freq == 211 && !endchirp) endchirp = true;
-            else if(peak.back()==211 && endchirp) break;
-
-        }
-        right += sampleFreq/10;
-    }
-
-
-    const unsigned short _8bitMask  = 0x00FF;
-    int read_bytes = 0;
-    for(auto x : data){
-        int tmp = x;
+        cout << "Tracked freq (100 Hz): ";
+        for(auto&x : peak) cout<< x <<" ";
+        cout<<endl;
+#endif
        
-        if(read_bytes==4 || read_bytes==10 ) cout << endl;
-        if(read_bytes < 4){
+                int content = 0;
+                for(auto&x : peak){
+                    int shift = x - 195;
+                    if(shift >=0) content |= 1 << shift;
+                }
 
-            while(tmp>0){
-                int d = tmp & _8bitMask;    
-#if DEBUG_FLAG
-                cout <<  d <<" ";
-#endif
-                tmp >>= 8;
+                //if odd, right shift padding
+                if(datalen==1) content >>= 8;
+                pktdata.push_back(content);
+                right += step;
+                //every data has two bytes
+                datalen -= 2;
             }
-        }else{
-            tmp = x;
-            while(tmp>0){
-                 char c = (char)(tmp & _8bitMask);
-#if DEBUG_FLAG
-                cout <<  c;
-#endif
-                tmp >>= 8;
-            }
+            data.push_back(pktdata);
         }
-        read_bytes += 2;
+        
+        const unsigned short _8bitMask  = 0x00FF;
+        int pos = 0;
+        for(auto& x: data){
+            pos++;
+            for(auto y :x) {
+                // cout<< y <<" ";
+                int tmp = y;
+                while(tmp > 0){
+                    int d = tmp & _8bitMask;    
+#if DEBUG_FLAG
+                   if(pos==1) cout <<  d <<" ";
+                   else cout << (char) d <<" ";
+#endif
+                    tmp >>= 8;
+                }
 
 
-    }
-    cout << endl;
+            }
+            cout<<endl;
+        }
+
 
 }
 
@@ -109,7 +136,7 @@ vector<int> FFTreader::findMax(Aquila::SpectrumType spectrum){
 
             //if(round_freq > highpass) cout << round_freq<< " amp " << absSpectrum[i-1] << endl;
             if(round_freq > highpass && absSpectrum[i-2] < absSpectrum[i-1] && absSpectrum[i-1] > absSpectrum[i] 
-                && absSpectrum[i-1] > 800000 ){
+                && absSpectrum[i-1] > abs_amp ){
                  
                  ret.push_back(round_freq);
                  // cout << round_freq<< " amp " <<absSpectrum[i-1] << endl;
