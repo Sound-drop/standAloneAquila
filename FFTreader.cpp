@@ -140,10 +140,11 @@ vector<string> FFTreader::parse(){
                    if(pos==1){ 
                         ip.push_back(d);
                    }else{ 
+                        cout << d << " ";
                         ret_str+=(char) d;
                    }
 
-                    tmp >>= 8;
+                   tmp >>= 8;
                 }
                 
                 
@@ -155,9 +156,11 @@ vector<string> FFTreader::parse(){
                         if(xx == ip.size()-1) ret_str += std::to_string(ip[xx]);
                         else ret_str+= std::to_string(ip[xx])+'.';
                     }
+                    cout<< "ascii codes";
             }
+            cout << endl;
             ret.push_back(ret_str);
-            cout<<endl;
+
         }
 
         //ready to return vector<string>
@@ -185,7 +188,9 @@ vector<int> FFTreader::findMax(Aquila::SpectrumType spectrum){
             if(round_freq > highpass && absSpectrum[i-2] < absSpectrum[i-1] && absSpectrum[i-1] > absSpectrum[i] 
                 && absSpectrum[i-1] > abs_amp ){
                  
+
                  // cout << "original freq " << (i-1)*(sampleFreq/halfLength)/2 << endl;
+                 if(ret.size() > 0 && ret.back()==round_freq) round_freq++;
                  ret.push_back(round_freq);
                  // cout << "round freq: "<<round_freq<<endl;
                  // cout << " amp " <<absSpectrum[i-1] << endl;
