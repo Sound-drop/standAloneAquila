@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include "FFTreader.hpp"
 using namespace std;
-#define abs_amp 100000 
+#define abs_amp 80000 
 #define startchirp 201
 #define DEBUG_FLAG     (1) 
 
@@ -21,17 +21,20 @@ vector<string> FFTreader::parse(){
         vector<int> peak= freqOfindex(start);
 
         if (peak.size() ==1 && peak.back() == startchirp){
-         break;
+                    break;
         }
         start += SIZE;
     }
-    int left = start - SIZE,right = start;
-    // while(left < right){
-    //     int mid = (left+right)/2;
-    //     vector<int> peak= freqOfindex(mid);
-    //     if (peak.size() ==1 && peak.back() == startchirp) right = mid;
-    //     else left = mid+ SIZE/8;
-    // }
+    int left = start - SIZE/2, right = start + SIZE/7;
+    while(left < right){
+
+        int mid = (left+right)/2;
+        // cout << wav.sample(mid) << endl;
+        vector<int> peak= freqOfindex(mid);
+        if (peak.size() ==1 && peak.back() == startchirp) right = mid;
+        else left = mid+1;
+    }
+    right += SIZE/2;
     std::vector<std::vector<int>> data;
     int pre_freq = 0, pkts = 0, step = sampleFreq/10; 
 
@@ -182,8 +185,10 @@ vector<int> FFTreader::findMax(Aquila::SpectrumType spectrum){
             if(round_freq > highpass && absSpectrum[i-2] < absSpectrum[i-1] && absSpectrum[i-1] > absSpectrum[i] 
                 && absSpectrum[i-1] > abs_amp ){
                  
+                 // cout << "original freq " << (i-1)*(sampleFreq/halfLength)/2 << endl;
                  ret.push_back(round_freq);
-                 // cout << round_freq<< " amp " <<absSpectrum[i-1] << endl;
+                 // cout << "round freq: "<<round_freq<<endl;
+                 // cout << " amp " <<absSpectrum[i-1] << endl;
             
             }
             
