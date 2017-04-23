@@ -110,12 +110,22 @@ vector<string> FFTreader::parse(){
                 int content = 0;
                 for(auto&x : peak){
                     int shift = x - (startchirp-16);
-                    if(shift >=0) content |= 1 << shift;
+                    if(x>=(startchirp-16) && x<=(startchirp-1)) content |= 1 << shift;
                 }
+               
 
                 //if odd, right shift padding
                 if(datalen==1) content >>= 8;
-                pktdata.push_back(content);
+
+                int shift = datalen==1 ? 1 : 2;
+                const unsigned short _8bitMask  = 0x00FF;
+                
+                while(shift-- > 0){
+                    int d = content & _8bitMask;  
+                    pktdata.push_back(d);  
+                    content >>= 8;
+                }
+
                 right += step;
                 //every data has two bytes
                 datalen -= 2;
@@ -125,7 +135,7 @@ vector<string> FFTreader::parse(){
             if(right >= END) break;
         }
         
-        const unsigned short _8bitMask  = 0x00FF;
+
         std::vector<string> ret;
         int pos = 0;
         for(auto& x: data){
@@ -133,23 +143,12 @@ vector<string> FFTreader::parse(){
             string ret_str = "";
             std::vector<int> ip;
             for(auto tmp :x) {
-
-                while(tmp > 0){
-                    int d = tmp & _8bitMask;    
-
-                   if(pos==1){ 
-                        ip.push_back(d);
-                   }else{ 
-                        cout << d << " ";
-                        ret_str+=(char) d;
-                   }
-
-                   tmp >>= 8;
-                }
-                
-                
-
-
+               if(pos==1){ 
+                    ip.push_back(tmp);
+               }else{ 
+                    cout << tmp << " ";
+                    ret_str+=(char) tmp;
+               }
             }
             if(ip.size()>0){
                     for(int xx=0; xx< ip.size(); xx++){ 
